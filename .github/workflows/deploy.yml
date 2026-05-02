@@ -1,0 +1,38 @@
+name: Deploy to DigitalOcean
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      - name: Deploy via SSH
+        uses: appleboy/ssh-action@v0.1.10
+        with:
+          host: ${{ secrets.DROPLET_IP }}
+          username: ${{ secrets.DROPLET_USER }}
+          password: ${{ secrets.DROPLET_PASSWORD }}
+          script: |
+            cd /var/www/LPU-Talk
+            
+            # Pull latest changes
+            git pull origin main
+            
+            # Setup Backend
+            cd backend
+            npm install --production
+            pm2 restart LPU_BACKEND || pm2 start server.js --name LPU_BACKEND
+            
+            # Setup Frontend
+            cd ../frontend
+            npm install
+            npm run build
+            
+            # Ensure Nginx is pointing to the frontend/build directory
+            sudo systemctl restart nginx
