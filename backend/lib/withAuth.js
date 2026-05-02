@@ -6,7 +6,7 @@
  * ═══════════════════════════════════════════════════════════════════════
  */
 
-const { supabase } = require('./supabase');
+const { supabase, supabaseAdmin } = require('./supabase');
 
 /**
  * Express middleware — protects routes behind Supabase auth.
@@ -26,6 +26,23 @@ async function withAuth(req, res, next) {
 
     if (error || !user) {
       return res.status(401).json({ error: 'Invalid or expired token' });
+    }
+
+    // SELF-HEALING: Ensure a profile exists for this user in the public.profiles table.
+    // If the Supabase trigger failed to create a profile, we do it here.
+    const { data: profile } = await supabaseAdmin
+      .from('profiles')
+      .select('id')
+      .eq('id', user.id)
+      .single();
+
+    if (!profile) {
+      await supabaseAdmin.from('profiles').upsert({
+        id: user.id,
+        email: user.email,
+        full_name: user.user_metadata?.full_name || user.email.split('@')[0],
+        avatar_url: user.user_metadata?.avatar_url || ''
+      });
     }
 
     // Attach user to request for downstream route handlers
