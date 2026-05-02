@@ -21,18 +21,23 @@ jobs:
           script: |
             cd /var/www/LPU-Talk
             
-            # Pull latest changes
-            git pull origin main
+            # Force pull latest changes (clears conflicts)
+            git fetch origin main
+            git reset --hard origin/main
             
             # Setup Backend
             cd backend
-            npm install --production
+            npm install --omit=dev
             pm2 restart LPU_BACKEND || pm2 start server.js --name LPU_BACKEND
             
             # Setup Frontend
             cd ../frontend
             npm install
+            
+            # Increase memory limit for build
+            export NODE_OPTIONS="--max-old-space-size=2048"
             npm run build
             
-            # Ensure Nginx is pointing to the frontend/build directory
+            # Final permission check and Nginx restart
+            sudo chmod -R 755 /var/www/LPU-Talk/frontend/build
             sudo systemctl restart nginx
