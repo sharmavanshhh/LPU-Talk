@@ -1,0 +1,76 @@
+=== TABLE 1 ===
+# | Section | Page Topic
+1 | Project Overview & Goals | Vision, scope, and constraints
+2 | Tech Stack Summary | All tools and why they were chosen
+3 | Backend Architecture | API routes, server design, middleware
+4 | Gemini API Integration | Model setup and topic restriction logic
+5 | Supabase Database Schema | All tables, relationships, RLS policies
+6 | Google OAuth with Supabase | Auth flow and session management
+7 | Frontend Architecture | Pages, components, routing
+8 | UI Theme & Design System | Beige/Orange LPU theme guide
+9 | Environment Variables Guide | What to set and where to get each key
+10 | Project Folder Structure | Full file tree for frontend & backend
+11 | Deployment Plan | Vercel + Supabase production setup
+12 | Security Checklist | Auth, API, DB, and input safety
+
+=== TABLE 2 ===
+Layer | Technology | Why
+Frontend | Next.js 14 (App Router) | React-based, SSR, easy routing, Vercel-native
+Styling | Tailwind CSS | Utility-first, fast to build responsive UIs
+Backend API | Next.js API Routes | No separate server needed, co-located with frontend
+AI Model | Google Gemini 1.5 Flash | Fast, cheap, handles topic restriction well via system prompt
+Auth | Supabase Auth + Google OAuth | Built-in OAuth, session management, JWT tokens
+Database | Supabase (PostgreSQL) | Managed Postgres, RLS policies, real-time support
+Deployment | Vercel | Zero-config Next.js deployment, automatic previews
+DB Client | supabase-js v2 | Official SDK, works in both browser and server
+
+=== TABLE 3 ===
+Route | Method | Auth Required | Description
+/api/chat | POST | Yes | Send a message, get Gemini response, save both to DB
+/api/chat/history | GET | Yes | Fetch all chat messages for the logged-in user
+/api/chat/sessions | GET | Yes | List all chat sessions for the user
+/api/chat/sessions/[id] | GET | Yes | Get all messages in a specific session
+/api/chat/sessions/[id] | DELETE | Yes | Delete a chat session
+/api/auth/callback | GET | No | Supabase OAuth callback handler
+/api/health | GET | No | Simple health check endpoint
+
+=== TABLE 4 ===
+Route | Component | Auth? | Purpose
+/ | app/page.jsx | No | Landing page with 'Sign in with Google' CTA
+/auth/callback | app/auth/callback/route.js | No | OAuth callback handler
+/chat | app/chat/page.jsx | Yes | Main chat interface — redirects if not logged in
+/chat/[sessionId] | app/chat/[sessionId]/page.jsx | Yes | Individual chat session view
+/profile | app/profile/page.jsx | Yes | User profile and settings
+
+=== TABLE 5 ===
+Token | Hex Value | Usage
+--primary | #E8630A | Orange — buttons, active states, user message bubbles, borders
+--primary-light | #FFF3E0 | Light orange — backgrounds, hover states, alternating rows
+--bg-main | #FAF6EF | Warm beige — main page background
+--bg-sidebar | #F5ECD7 | Deeper beige — sidebar background
+--text-dark | #3D2B1F | Dark brown — all body text, headings
+--text-muted | #8B7355 | Muted brown — timestamps, placeholders
+--bot-bubble | #FFFFFF | White — bot reply message bubbles
+--border | #D4A574 | Warm border — dividers, input borders
+
+=== TABLE 6 ===
+Variable | Where to Get It | Notes
+NEXT_PUBLIC_SUPABASE_URL | Supabase Dashboard → Project Settings → API → Project URL | Safe to expose — starts with https://
+NEXT_PUBLIC_SUPABASE_ANON_KEY | Supabase Dashboard → Project Settings → API → anon public key | Safe to expose — used in browser. RLS policies protect data.
+SUPABASE_SERVICE_ROLE_KEY | Supabase Dashboard → Project Settings → API → service_role secret key | NEVER expose this! Server-side only. Bypasses RLS.
+GEMINI_API_KEY | Google AI Studio → aistudio.google.com → Get API Key → Create API Key | Server-side only. Free tier available. Never use NEXT_PUBLIC_ prefix.
+NEXT_PUBLIC_APP_URL | Set manually — localhost:3000 for dev, your Vercel domain in production | Used for OAuth redirect URLs
+
+=== TABLE 7 ===
+Area | Check | How
+API Auth | All /api/chat routes require valid Supabase JWT | withAuth() middleware on every protected route
+API Auth | Service role key never exposed to browser | Only used in server-side API routes, not in NEXT_PUBLIC_ vars
+Database | RLS enabled on all tables | auth.uid() = user_id on all policies
+Database | Users cannot access others' chats | RLS policy: user_id must match auth.uid()
+AI Restriction | Gemini system prompt enforces LPU-only | Sent on every API call — cannot be bypassed by user
+AI Restriction | Optional keyword pre-filter saves API budget | isLikelyLPUQuery() check before calling Gemini
+Input | Max message length enforced | Validate: message.length <= 1000 in API route
+Input | Rate limiting on /api/chat | Add Vercel Edge rate limiting or check Supabase quotas
+Secrets | .env.local in .gitignore | Never committed to version control
+Auth | OAuth redirects validated by Supabase | Supabase only accepts registered callback URLs
+
