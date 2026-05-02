@@ -1,6 +1,6 @@
 # LPU Talk
 
-LPU Talk is an intelligent, domain-specific AI chatbot designed exclusively for Lovely Professional University (LPU). It provides students, faculty, and visitors with instant, accurate information regarding admissions, campus life, academic policies, and administrative details.
+LPU Talk is a sample domain-specific AI chatbot prototype designed for Lovely Professional University (LPU). It demonstrates how an intelligent assistant can provide students, faculty, and visitors with instant, accurate information regarding admissions, campus life, academic policies, and administrative details.
 
 ## Project Overview
 
